@@ -1,0 +1,21 @@
+{
+  "name": "oneclick",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "dependencies": {
+    "@aws-sdk/client-ecr": "^3.782.0",
+    "@aws-sdk/client-ecs": "^3.782.0",
+    "child_process": "^1.0.2",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.7",
+    "express": "^5.1.0",
+    "simple-git": "^3.27.0"
+  }
+}

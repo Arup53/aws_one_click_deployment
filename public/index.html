@@ -1,0 +1,192 @@
+<!-- File: public/index.html -->
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>One-Click Deployment</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        margin: 0;
+        padding: 20px;
+        background-color: #f5f5f5;
+        color: #333;
+      }
+      .container {
+        max-width: 800px;
+        margin: 0 auto;
+        background-color: #fff;
+        padding: 20px;
+        border-radius: 5px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+      }
+      h1 {
+        color: #333;
+        text-align: center;
+        margin-bottom: 30px;
+      }
+      .form-group {
+        margin-bottom: 15px;
+      }
+      label {
+        display: block;
+        margin-bottom: 5px;
+        font-weight: bold;
+      }
+      input[type="text"] {
+        width: 100%;
+        padding: 10px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        box-sizing: border-box;
+      }
+      button {
+        background-color: #4caf50;
+        color: white;
+        padding: 10px 15px;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 16px;
+        width: 100%;
+      }
+      button:hover {
+        background-color: #45a049;
+      }
+      .logs {
+        margin-top: 30px;
+        border: 1px solid #ddd;
+        padding: 10px;
+        height: 200px;
+        overflow-y: auto;
+        background-color: #f9f9f9;
+      }
+      .deployment-status {
+        margin-top: 20px;
+        padding: 10px;
+        border-radius: 4px;
+        text-align: center;
+        font-weight: bold;
+      }
+      .status-pending {
+        background-color: #fff3cd;
+        color: #856404;
+      }
+      .status-success {
+        background-color: #d4edda;
+        color: #155724;
+      }
+      .status-error {
+        background-color: #f8d7da;
+        color: #721c24;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>One-Click Deployment</h1>
+
+      <div class="form-group">
+        <label for="repoUrl">Git Repository URL:</label>
+        <input
+          type="text"
+          id="repoUrl"
+          placeholder="https://github.com/username/repo.git"
+        />
+      </div>
+
+      <div class="form-group">
+        <label for="branch">Branch:</label>
+        <input type="text" id="branch" placeholder="main" value="main" />
+      </div>
+
+      <div class="form-group">
+        <label for="appName">Application Name:</label>
+        <input type="text" id="appName" placeholder="my-app" />
+      </div>
+
+      <button id="deployBtn">Deploy Now</button>
+
+      <div
+        id="deploymentStatus"
+        class="deployment-status"
+        style="display: none"
+      ></div>
+
+      <div class="logs">
+        <h3>Deployment Logs</h3>
+        <pre id="logs"></pre>
+      </div>
+    </div>
+
+    <script>
+      document
+        .getElementById("deployBtn")
+        .addEventListener("click", async () => {
+          const repoUrl = document.getElementById("repoUrl").value;
+          const branch = document.getElementById("branch").value;
+          const appName = document.getElementById("appName").value;
+          const logsElement = document.getElementById("logs");
+          const statusElement = document.getElementById("deploymentStatus");
+
+          if (!repoUrl || !branch || !appName) {
+            alert("Please fill in all fields");
+            return;
+          }
+
+          // Show pending status
+          statusElement.textContent = "Deployment initiated...";
+          statusElement.className = "deployment-status status-pending";
+          statusElement.style.display = "block";
+
+          logsElement.textContent += `[${new Date().toLocaleTimeString()}] Starting deployment from ${repoUrl} (${branch})...\n`;
+
+          try {
+            const response = await fetch("http://localhost:3000/api/deploy", {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({ repoUrl, branch, appName }),
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+              logsElement.textContent += `[${new Date().toLocaleTimeString()}] Deployment started successfully. ID: ${
+                result.deploymentId
+              }\n`;
+              logsElement.textContent += `[${new Date().toLocaleTimeString()}] Building and pushing Docker image...\n`;
+
+              // In a real app, you would poll for status, but we'll simulate it here
+              setTimeout(() => {
+                logsElement.textContent += `[${new Date().toLocaleTimeString()}] Docker image built and pushed to ECR\n`;
+                logsElement.textContent += `[${new Date().toLocaleTimeString()}] Updating ECS service...\n`;
+              }, 2000);
+
+              setTimeout(() => {
+                logsElement.textContent += `[${new Date().toLocaleTimeString()}] ECS service updated successfully\n`;
+                logsElement.textContent += `[${new Date().toLocaleTimeString()}] Deployment completed!\n`;
+
+                statusElement.textContent = "Deployment successful!";
+                statusElement.className = "deployment-status status-success";
+              }, 4000);
+            } else {
+              logsElement.textContent += `[${new Date().toLocaleTimeString()}] Error: ${
+                result.message
+              }\n`;
+              statusElement.textContent = "Deployment failed";
+              statusElement.className = "deployment-status status-error";
+            }
+          } catch (error) {
+            logsElement.textContent += `[${new Date().toLocaleTimeString()}] Error: ${
+              error.message
+            }\n`;
+            statusElement.textContent = "Deployment failed";
+            statusElement.className = "deployment-status status-error";
+          }
+        });
+    </script>
+  </body>
+</html>
